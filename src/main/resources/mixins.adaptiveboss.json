@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "package": "com.adaptiveboss.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [],
+  "server": [
+    "WitherMixin",
+    "EnderDragonMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

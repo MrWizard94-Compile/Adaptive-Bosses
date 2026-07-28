@@ -1,0 +1,25 @@
+{
+  "adaptiveboss.config.adaptation.title": "Adaptation",
+  "adaptiveboss.config.adaptation.adaptationInterval": "Adaptation Interval",
+  "adaptiveboss.config.adaptation.adaptationInterval.tooltip": "Ticks between each adaptation evaluation (~20 ticks = 1 second). Range: 20–200.",
+  "adaptiveboss.config.adaptation.decayFactor": "Decay Factor",
+  "adaptiveboss.config.adaptation.decayFactor.tooltip": "Exponential decay applied to combat weights each cycle. Lower = more responsive but volatile. Range: 0.5–1.0.",
+  "adaptiveboss.config.adaptation.meleeThreshold": "Melee Threshold",
+  "adaptiveboss.config.adaptation.meleeThreshold.tooltip": "Melee damage ratio at which the boss switches to KITER archetype. Default: 0.60.",
+  "adaptiveboss.config.adaptation.rangedThreshold": "Ranged Threshold",
+  "adaptiveboss.config.adaptation.rangedThreshold.tooltip": "Ranged damage ratio at which the boss switches to AGGRESSOR archetype. Default: 0.60.",
+  "adaptiveboss.config.adaptation.archetypeHysteresisCycles": "Hysteresis Cycles",
+  "adaptiveboss.config.adaptation.archetypeHysteresisCycles.tooltip": "Consecutive cycles an archetype must be recommended before it is committed. Prevents flip-flopping. Default: 2.",
+
+  "adaptiveboss.config.tracking.title": "Tracking",
+  "adaptiveboss.config.tracking.sessionExpiryTicks": "Session Expiry (Ticks)",
+  "adaptiveboss.config.tracking.sessionExpiryTicks.tooltip": "Ticks of inactivity before a player's combat session expires. Expired sessions are ignored. Default: 200.",
+  "adaptiveboss.config.tracking.weightHitsByDamage": "Weight Hits by Damage",
+  "adaptiveboss.config.tracking.weightHitsByDamage.tooltip": "When enabled, hits are weighted by actual damage dealt. A full-power shot counts more than a chip. Default: true.",
+  "adaptiveboss.config.tracking.filterNonRealPlayers": "Filter Non-Real Players",
+  "adaptiveboss.config.tracking.filterNonRealPlayers.tooltip": "When enabled, spectators and fake players (bots) are excluded from combat tracking. Default: true.",
+
+  "adaptiveboss.config.debug.title": "Debug",
+  "adaptiveboss.config.debug.debugLogging": "Debug Logging",
+  "adaptiveboss.config.debug.debugLogging.tooltip": "Enables verbose archetype transition logging. Shows melee/ranged/magic ratios each adaptation cycle. Default: false."
+}

@@ -1,0 +1,39 @@
+# Gradle
+.gradle/
+build/
+out/
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+
+# Eclipse
+.classpath
+.project
+.settings/
+eclipse/
+
+# VS Code
+.vscode/
+
+# NeoForge run artifacts
+run/
+runs/
+logs/
+server.log
+
+# JaCoCo & Checkstyle reports
+**/build/reports/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local credentials and assistant-local state.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+.claude/settings.local.json

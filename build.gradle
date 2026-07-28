@@ -1,0 +1,215 @@
+plugins {
+    id 'java-library'
+    id 'checkstyle'
+    id 'jacoco'
+    id 'net.neoforged.gradle.userdev' version '7.1.25'
+}
+
+group = mod_group
+version = mod_version
+
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(21)
+    withSourcesJar()
+}
+
+sourceSets {
+    gameTest {
+        java.srcDirs      = ['src/gametest/java']
+        resources.srcDirs = ['src/gametest/resources']
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += sourceSets.main.output
+    }
+}
+
+runs {
+    configureEach {
+        systemProperty 'forge.logging.markers', 'REGISTRIES'
+        systemProperty 'forge.logging.console.level', 'debug'
+    }
+
+    server {
+        modSource project.sourceSets.main
+    }
+
+    gameTestServer {
+        modSource(sourceSets.main)
+        modSource(sourceSets.gameTest)
+    }
+}
+
+dependencies {
+    implementation "net.neoforged:neoforge:${neoforge_version}"
+    compileOnly 'org.jetbrains:annotations:24.1.0'
+    testCompileOnly 'org.jetbrains:annotations:24.1.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
+    testImplementation 'org.mockito:mockito-core:5.11.0'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    gameTestImplementation "net.neoforged:neoforge:${neoforge_version}"
+    gameTestCompileOnly    'org.jetbrains:annotations:24.1.0'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+// ── Resource token substitution ─────────────────────────────────────────────
+processResources {
+    final def replaceProperties = [mod_version: mod_version, mod_id: mod_id]
+    inputs.properties replaceProperties
+    filesMatching('META-INF/neoforge.mods.toml') {
+        expand replaceProperties
+    }
+}
+
+// ── Checkstyle ──────────────────────────────────────────────────────────────
+checkstyle {
+    toolVersion = '10.17.0'
+    configFile = file('config/checkstyle/checkstyle.xml')
+}
+
+tasks.withType(Checkstyle).configureEach {
+    reports {
+        xml.required = false
+        html.required = true
+    }
+}
+
+// ── JaCoCo ───────────────────────────────────────────────────────────────────
+jacoco {
+    toolVersion = '0.8.12'
+}
+
+jacocoTestReport {
+    dependsOn test
+    reports {
+        xml.required = true
+        html.required = true
+    }
+}
+
+jacocoTestCoverageVerification {
+    dependsOn jacocoTestReport
+    violationRules {
+        rule {
+            element = 'CLASS'
+            // Exclude classes that require a live Minecraft runtime
+            excludes = [
+                // Need live Minecraft runtime
+                'com.adaptiveboss.mixin.*',
+                'com.adaptiveboss.goal.*',
+                'com.adaptiveboss.event.*',
+                'com.adaptiveboss.command.*',
+                'com.adaptiveboss.AdaptiveBossMod',
+                // Need NeoForge ModConfigSpec runtime
+                'com.adaptiveboss.config.AdaptiveBossConfig',
+                // Depend on Mob/GoalSelector or EnderDragon MC runtime
+                'com.adaptiveboss.adaptation.AdaptationEngine',
+                'com.adaptiveboss.adaptation.DragonPhaseApplier',
+                // Constants-only class; no testable behaviour
+                'com.adaptiveboss.registry.AdaptiveBossTags',
+                // EntityType static initializer requires MC bootstrap; integration test only
+                'com.adaptiveboss.registry.AdaptiveBossRegistry',
+                // looksLikeBoss(LivingEntity) requires MC bootstrap; core logic tested via looksLikeBossClass
+                'com.adaptiveboss.registry.BossDetectionHelper'
+            ]
+            limit {
+                counter = 'LINE'
+                value   = 'COVEREDRATIO'
+                minimum = 1.0
+            }
+            limit {
+                counter = 'BRANCH'
+                value   = 'COVEREDRATIO'
+                minimum = 1.0
+            }
+        }
+    }
+}
+
+check.dependsOn jacocoTestCoverageVerification
+check.dependsOn 'runGameTestServer'
+
+// ── GameTest structure generation ─────────────────────────────────────────────
+void writeEmptyStructureNbt(File out) {
+    def baos = new ByteArrayOutputStream()
+    def dos  = new DataOutputStream(baos)
+    def str  = { String s -> dos.writeShort(s.length()); dos.writeBytes(s) }
+
+    dos.writeByte(10); dos.writeShort(0)          // root TAG_Compound, empty name
+
+    dos.writeByte(9);  str('size')                // TAG_List 'size'
+    dos.writeByte(3);  dos.writeInt(3)            // elem=TAG_Int, count=3
+    [9, 9, 9].each { dos.writeInt(it) }
+
+    dos.writeByte(9);  str('entities')            // empty entity list
+    dos.writeByte(10); dos.writeInt(0)
+
+    dos.writeByte(9);  str('blocks')              // empty block list
+    dos.writeByte(10); dos.writeInt(0)
+
+    dos.writeByte(9);  str('palette')             // palette: [minecraft:air]
+    dos.writeByte(10); dos.writeInt(1)
+    dos.writeByte(8);  str('Name'); str('minecraft:air')
+    dos.writeByte(0)                              // TAG_End for palette entry
+
+    dos.writeByte(3);  str('DataVersion'); dos.writeInt(3955)
+    dos.writeByte(0)                              // TAG_End for root
+    dos.flush()
+
+    out.parentFile.mkdirs()
+    out.withOutputStream { fos ->
+        def gz = new java.util.zip.GZIPOutputStream(fos)
+        gz.write(baos.toByteArray())
+        gz.close()
+    }
+}
+
+tasks.register('generateGameTestStructures') {
+    def structDir = file("src/main/resources/data/${mod_id}/structure")
+    def out1 = new File(structDir, 'bosslifecyclegametest.empty_platform.nbt')
+    def out2 = new File(structDir, 'adaptationloopgametest.empty_platform.nbt')
+    inputs.property 'structureVersion', 1
+    outputs.files out1, out2
+    doLast {
+        // Inline NBT generation — external method calls don't resolve in tasks.register doLast
+        [out1, out2].each { outFile ->
+            def baos = new ByteArrayOutputStream()
+            def dos  = new DataOutputStream(baos)
+            // Root TAG_Compound, empty name
+            dos.writeByte(10); dos.writeShort(0)
+            // size: TAG_List [9,9,9]
+            dos.writeByte(9); dos.writeShort(4); dos.writeBytes('size')
+            dos.writeByte(3); dos.writeInt(3); [9,9,9].each { dos.writeInt(it) }
+            // entities: empty list
+            dos.writeByte(9); dos.writeShort(8); dos.writeBytes('entities')
+            dos.writeByte(10); dos.writeInt(0)
+            // blocks: empty list
+            dos.writeByte(9); dos.writeShort(6); dos.writeBytes('blocks')
+            dos.writeByte(10); dos.writeInt(0)
+            // palette: [{Name:"minecraft:air"}]
+            dos.writeByte(9); dos.writeShort(7); dos.writeBytes('palette')
+            dos.writeByte(10); dos.writeInt(1)
+            dos.writeByte(8); dos.writeShort(4); dos.writeBytes('Name')
+            dos.writeShort(13); dos.writeBytes('minecraft:air')
+            dos.writeByte(0)
+            // DataVersion: 3955
+            dos.writeByte(3); dos.writeShort(11); dos.writeBytes('DataVersion'); dos.writeInt(3955)
+            dos.writeByte(0)
+            dos.flush()
+            outFile.parentFile.mkdirs()
+            outFile.withOutputStream { fos ->
+                def gz = new java.util.zip.GZIPOutputStream(fos)
+                gz.write(baos.toByteArray())
+                gz.close()
+            }
+        }
+    }
+}
+
+processResources.dependsOn 'generateGameTestStructures'
+sourcesJar.dependsOn      'generateGameTestStructures'
+
+tasks.matching { it.name == 'processGameTestResources' }.configureEach {
+    dependsOn 'generateGameTestStructures'
+}
