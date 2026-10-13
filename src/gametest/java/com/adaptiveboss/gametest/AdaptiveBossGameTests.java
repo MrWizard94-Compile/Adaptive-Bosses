@@ -12,7 +12,7 @@ import org.jetbrains.annotations.NotNull;
  * <p>Wired via the mod event bus so tests are picked up by
  * {@code ./gradlew runGameTestServer}.
  */
-@EventBusSubscriber(modid = AdaptiveBossMod.MOD_ID, bus = EventBusSubscriber.Bus.MOD)
+@EventBusSubscriber(modid = AdaptiveBossMod.MOD_ID)
 public final class AdaptiveBossGameTests {
 
     private AdaptiveBossGameTests() { }
