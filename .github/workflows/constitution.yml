@@ -53,4 +53,4 @@ jobs:
           cache: gradle
 
       - name: Compile, test, analyze, and run GameTests
-        run: ./gradlew check --warning-mode all
+        run: bash ./gradlew check --warning-mode all

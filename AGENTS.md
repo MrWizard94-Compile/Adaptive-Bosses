@@ -25,7 +25,8 @@ adaptation, and combat behavior lives under
 - On Windows, run `.\gradlew.bat test --warning-mode all` for unit tests and
   `.\gradlew.bat check --warning-mode all` for the configured Checkstyle,
   coverage, and GameTest gates.
-- On Linux, use `./gradlew` with the same tasks and flags.
+- On Linux, use `bash ./gradlew` with the same tasks and flags; the tracked
+  wrapper is not marked executable.
 - `check` includes `runGameTestServer` through `build.gradle`; inspect its
   fresh result rather than inferring GameTest success from unit tests.
 - Build/test and GameTest results are source/runtime evidence, not fresh
