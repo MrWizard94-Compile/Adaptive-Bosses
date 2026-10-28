@@ -13,13 +13,14 @@ license="MIT"
     authors="MrWizard94"
     description="""
         Bosses observe how you fight and adapt their tactics every few seconds.
-        Works with Wither, Ender Dragon, and any modded boss automatically.
+        Works with Wither, Ender Dragon, Warden, and any boss in #adaptiveboss:bosses
+        (plus reflection auto-detect). Legends Beyond ships an expanded optional tag.
     """
 
 [[dependencies.adaptiveboss]]
     modId="neoforge"
     type="required"
-    versionRange="[21.1,)"
+    versionRange="[21.1.248,)"
     ordering="NONE"
     side="BOTH"
 

@@ -53,9 +53,10 @@ public final class AdaptiveBossMod {
 
         container.registerConfig(ModConfig.Type.SERVER, config.spec);
 
-        // Register default vanilla bosses
+        // Register default vanilla bosses (Warden also covered by Adaptive Attacks)
         AdaptiveBossRegistry.registerBoss(EntityType.WITHER);
         AdaptiveBossRegistry.registerBoss(EntityType.ENDER_DRAGON);
+        AdaptiveBossRegistry.registerBoss(EntityType.WARDEN);
 
         // Register game-thread event listeners
         NeoForge.EVENT_BUS.register(new DamageTrackingHandler(tracker, config));
@@ -63,7 +64,9 @@ public final class AdaptiveBossMod {
         NeoForge.EVENT_BUS.register(new AdaptationTickHandler(tracker, config));
         NeoForge.EVENT_BUS.register(new AdaptiveBossCommands(tracker, engine));
 
-        LOGGER.info("[AdaptiveBoss] Mod initialised. Wither and Ender Dragon are registered.");
+        LOGGER.info(
+                "[AdaptiveBoss] Mod initialised. Wither, Ender Dragon, and Warden are registered;"
+                        + " #adaptiveboss:bosses and reflection cover pack/modded bosses.");
     }
 
     /**

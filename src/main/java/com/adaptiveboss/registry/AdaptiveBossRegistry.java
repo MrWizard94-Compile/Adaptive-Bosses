@@ -1,8 +1,11 @@
 package com.adaptiveboss.registry;
 
 import java.util.Collections;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import org.jetbrains.annotations.NotNull;
 
@@ -12,6 +15,10 @@ import org.jetbrains.annotations.NotNull;
  * <p>Third-party mods can call {@link #registerBoss(EntityType)} during their
  * mod initialisation to opt their bosses into the adaptation system. Wither and
  * Ender Dragon are registered automatically by this mod.
+ *
+ * <p>Pack makers can also list bosses in {@code #adaptiveboss:bosses} (optional
+ * entries supported). Use {@link #registerIfPresent(ResourceLocation)} when a
+ * hard registry reference is preferred and the mod may be absent.
  *
  * <p>Registration is additive and thread-safe. Registering the same entity type
  * more than once is harmless.
@@ -33,6 +40,35 @@ public final class AdaptiveBossRegistry {
      */
     public static void registerBoss(@NotNull final EntityType<?> entityType) {
         REGISTERED.add(entityType);
+    }
+
+    /**
+     * Registers a boss by registry id when that entity type exists.
+     *
+     * @param id entity type id ({@code namespace:path})
+     * @return {@code true} if the type was present and registered
+     */
+    public static boolean registerIfPresent(@NotNull final ResourceLocation id) {
+        final Optional<EntityType<?>> type = BuiltInRegistries.ENTITY_TYPE.getOptional(id);
+        if (type.isEmpty()) {
+            return false;
+        }
+        registerBoss(type.get());
+        return true;
+    }
+
+    /**
+     * Convenience overload of {@link #registerIfPresent(ResourceLocation)}.
+     *
+     * @param id entity type id string ({@code namespace:path})
+     * @return {@code true} if the type was present and registered
+     */
+    public static boolean registerIfPresent(@NotNull final String id) {
+        final ResourceLocation location = ResourceLocation.tryParse(id);
+        if (location == null) {
+            return false;
+        }
+        return registerIfPresent(location);
     }
 
     /**
